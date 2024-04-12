@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:quizitto/option_btn.dart';
 import 'package:quizitto/question.dart';
@@ -15,10 +14,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   bool _isClicked = true;
+  int _score = 0;
 
   @override
   Widget build(BuildContext context) {
-     //_currentIndex = 0 ;
+     //_currentIndex = 0;
     final currentQuestion = questionList[_currentIndex];
     return Scaffold(
       body: Container(
@@ -42,12 +42,20 @@ class _HomePageState extends State<HomePage> {
                   child: Image.asset('assets/img/${currentQuestion.logo}.png',
                       width: 320, height: 200, fit: BoxFit.cover),
                 ),
-                Slider(
-                  max: questionList.length.toDouble() - 1,
-                  value: _currentIndex.toDouble(),
-                  onChanged: (v) {},
-                  activeColor: Colors.greenAccent,
-                  inactiveColor: Colors.grey.shade200,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(child: Slider(
+                      max: questionList.length.toDouble() - 1,
+                      value: _currentIndex.toDouble(),
+                      onChanged: (v) {},
+                      activeColor: Colors.greenAccent,
+                      inactiveColor: Colors.grey.shade200,
+                    )),
+                    const SizedBox(width: 5),
+                    Text("${_currentIndex+1}/${questionList.length}")
+                  ],
                 ),
                 Column(children: [
                   OptionBtn(
@@ -76,13 +84,13 @@ class _HomePageState extends State<HomePage> {
                   ),
                   OptionBtn(
                     enabled: true,
-                    title: "Next",
+                    title: _currentIndex == questionList.length -1 ? "Finish" : "Next",
                     onClick: () {
                       if (_currentIndex < questionList.length - 1) {
                         _currentIndex++;
                         _isClicked = true;
                       } else {
-                        print('tugadi');
+                        _showFinishDialog();
                       }
                       setState(() {});
                     },
@@ -97,11 +105,31 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _showFinishDialog() {
+    showDialog(context: context, builder: (context) => AlertDialog(
+      title: const Text("Your result"),
+      content: Text("$_score/${questionList.length}",style: const TextStyle(fontSize: 25),),
+      actions: [
+        TextButton(onPressed: _finishTheGame, child: const Text("OK"))
+      ],
+    ));
+  }
+
+  void _finishTheGame() {
+    Navigator.of(context).pop();
+    _score = 0;
+    _currentIndex = 0;
+    questionList.shuffle();
+    _isClicked = true;
+    setState(() {});
+  }
+
   void _checkOption(int index, int correct) {
     _isClicked = false;
     setState(() {
     });
     if (index == correct) {
+      _score++;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text("Correct"),
           backgroundColor: Colors.green,
